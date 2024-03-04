@@ -65,13 +65,14 @@ const ballMaterial = new THREE.MeshPhysicalMaterial({
   clearcoat: 1,
   clearcoatRoughness: 0.5,
   side: THREE.DoubleSide,
-  emissive: 0xff0000,
+  emissive: 0xffff00,
+  emissiveIntensity: 0.5,
 });
 const ballMesh = new THREE.Mesh(ball, ballMaterial);
 scene.add(ballMesh);
 
 // Create a light emitting from the ball
-const ballLight = new THREE.PointLight(0xff0000, 0.5, 100);
+const ballLight = new THREE.PointLight(0xffff00, 0.5, 100);
 ballLight.position.set(0, 0, 0);
 scene.add(ballLight);
 
@@ -83,6 +84,8 @@ const paddleMaterial = new THREE.MeshPhysicalMaterial({
   roughness: 0.5,
   clearcoat: 1,
   clearcoatRoughness: 0.5,
+  emissive: 0x0000ff,
+  emissiveIntensity: 0.5,
   side: THREE.DoubleSide,
 });
 const paddleMesh1 = new THREE.Mesh(paddle, paddleMaterial);
@@ -91,6 +94,35 @@ scene.add(paddleMesh1);
 // Create a paddle
 const paddleMesh2 = new THREE.Mesh(paddle, paddleMaterial);
 scene.add(paddleMesh2);
+
+// Create lights for the paddles
+const paddleLightGroup1 = new THREE.Group();
+const paddleLightGroup2 = new THREE.Group();
+
+for (
+  let i = paddleMesh1.position.y - 0.25;
+  i <= paddleMesh1.position.y + 0.25;
+  i += 0.1
+) {
+  const paddleLight = new THREE.PointLight(0x0000ff, 0.2, 100);
+  paddleLight.position.set(-2.8, i, 0.2);
+  paddleLightGroup1.add(paddleLight);
+}
+
+for (
+  let i = paddleMesh2.position.y - 0.25;
+  i <= paddleMesh2.position.y + 0.25;
+  i += 0.1
+) {
+  const paddleLight = new THREE.PointLight(0x0000ff, 0.2, 100);
+  paddleLight.position.set(2.8, i, 0.2);
+  paddleLightGroup2.add(paddleLight);
+}
+
+scene.add(paddleLightGroup1);
+scene.add(paddleLightGroup2);
+
+console.log(paddleLightGroup1);
 
 // Set the position of the ball
 ballMesh.position.x = 0;
@@ -108,7 +140,7 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
 // Create a pointLight
-const pointLight = new THREE.PointLight(0xffffff, 3, 1000);
+const pointLight = new THREE.PointLight(0xffffff, 1, 1000);
 pointLight.position.set(0, 0, 1);
 scene.add(pointLight);
 
@@ -132,35 +164,37 @@ let direction = new THREE.Vector3(
 // mesh1 moves key W and S
 // mesh2 moves key UP and DOWN
 let paddleSpeed = 0.05;
-let keyDownList = [];
+let keyDownList = new Set();
 
 document.addEventListener("keydown", (event) => {
+  console.log(event.key);
   if (event.key === "w") {
-    keyDownList.push("w");
+    keyDownList.add("w");
   }
   if (event.key === "s") {
-    keyDownList.push("s");
+    keyDownList.add("s");
   }
   if (event.key === "ArrowUp") {
-    keyDownList.push("ArrowUp");
+    keyDownList.add("ArrowUp");
   }
   if (event.key === "ArrowDown") {
-    keyDownList.push("ArrowDown");
+    keyDownList.add("ArrowDown");
   }
 });
 
 document.addEventListener("keyup", (event) => {
+  console.log(event.key);
   if (event.key === "w") {
-    keyDownList = keyDownList.filter((key) => key !== "w");
+    keyDownList.delete("w");
   }
   if (event.key === "s") {
-    keyDownList = keyDownList.filter((key) => key !== "s");
+    keyDownList.delete("s");
   }
   if (event.key === "ArrowUp") {
-    keyDownList = keyDownList.filter((key) => key !== "ArrowUp");
+    keyDownList.delete("ArrowUp");
   }
   if (event.key === "ArrowDown") {
-    keyDownList = keyDownList.filter((key) => key !== "ArrowDown");
+    keyDownList.delete("ArrowDown");
   }
 });
 
@@ -179,8 +213,6 @@ const calculateReflection = (paddleMesh) => {
   const bounceAngle = normalizedRelativeIntersectionY * (Math.PI / 2.5);
   return bounceAngle;
 };
-
-// calculate the reflection angle of the ball
 
 // Create an animation
 const animate = () => {
@@ -225,24 +257,28 @@ const animate = () => {
   }
 
   // Paddle movement
-  if (keyDownList.includes("w")) {
+  if (keyDownList.has("w")) {
     if (paddleMesh1.position.y < 1.75) {
       paddleMesh1.position.y += paddleSpeed;
+      paddleLightGroup1.position.y += paddleSpeed;
     }
   }
-  if (keyDownList.includes("s")) {
+  if (keyDownList.has("s")) {
     if (paddleMesh1.position.y > -1.75) {
       paddleMesh1.position.y -= paddleSpeed;
+      paddleLightGroup1.position.y -= paddleSpeed;
     }
   }
-  if (keyDownList.includes("ArrowUp")) {
+  if (keyDownList.has("ArrowUp")) {
     if (paddleMesh2.position.y < 1.75) {
       paddleMesh2.position.y += paddleSpeed;
+      paddleLightGroup2.position.y += paddleSpeed;
     }
   }
-  if (keyDownList.includes("ArrowDown")) {
+  if (keyDownList.has("ArrowDown")) {
     if (paddleMesh2.position.y > -1.75) {
       paddleMesh2.position.y -= paddleSpeed;
+      paddleLightGroup2.position.y -= paddleSpeed;
     }
   }
 
